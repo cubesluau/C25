@@ -66,11 +66,11 @@ local function trackDrawing(d) if d then table.insert(HUB.drawings, d) end; retu
 
 local Window = Rayfield:CreateWindow({
     Name = "Carbonation Hub",
-    Icon = "bubbles", -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+    Icon = "snowflake", -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
     LoadingTitle = "Loading C25..",
     LoadingSubtitle = "Welcome to Carbonation Hub",
-    ShowText = "C25",
-    Theme = "Green",
+    ShowText = "C25",  -- This property doesn't exist in Rayfield
+    Theme = "Green",   -- Rayfield uses "Default", "Dark", "Light", not color names
     ConfigurationSaving = {
         Enabled = true,
         FolderName = "Carbonation",
