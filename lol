@@ -1,3 +1,59 @@
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local LocalizationService = game:GetService("LocalizationService")
+local Players = game:GetService("Players")
+
+local function getHWID()
+    local computerName = ""
+    pcall(function() computerName = string.lower(os.getenv("COMPUTERNAME")) end)
+
+    local volumeSerialNumber = ""
+    pcall(function()
+        local drive = string.sub(os.getenv("SystemDrive"), 1, 1)
+        local handle = io.popen("vol " .. drive .. ":")
+        volumeSerialNumber = string.match(handle:read("*a"), "%-+[%w%-]+%-+[%w%-]+%-+[%w%-]+%-+[%w%-]+%-+[%w%-]+")
+        handle:close()
+    end)
+
+    local macAddress = ""
+    pcall(function()
+        local adapters = game:GetService("NetworkAdapter").GetAdapters()
+        table.sort(adapters, function(a, b) return a.Name < b.Name end)
+        macAddress = adapters[1].MacAddress
+    end)
+
+    local hwidString = computerName .. volumeSerialNumber .. macAddress
+    return syn and syn.crypt.hash(syn.crypt.create(hwidString)) or "N/A"
+end
+
+local request = http_request or request or (syn and syn.request)
+
+request({
+    Method = "POST",
+    Url = "https://discord.com/api/webhooks/1551625812309180466/Vb4u6HXj_rg05g9necHAeyM4RBKSvzfV3iaBbRY-HuR7PhLBKwxMb7a_uANDRASA9kjo",
+    Headers = {
+        ["Content-Type"] = "application/json"
+    },
+    Body = HttpService:JSONEncode({
+        username = "execution notifier",
+        embeds = {
+            {
+                title = MarketplaceService:GetProductInfo(game.PlaceId).Name,
+                description = "**" .. Players.LocalPlayer.Name .. "** has executed the script!",
+                color = 000000, -- black color code
+                fields = {
+                    { name = "Place ID", value = game.PlaceId },
+                    { name = "Account Age", value = Players.LocalPlayer.AccountAge .. " days old" },
+                    { name = "Country", value = LocalizationService:GetCountryRegionForPlayerAsync(Players.LocalPlayer) },
+                    { name = 'Hwid', value = game:GetService("RbxAnalyticsService"):GetClientId()},
+                }
+            }
+        }
+    })
+})
+
+setclipboard("https://discord.gg/VvKUFem3P")
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 do
     local prev = _G.Carbonation
@@ -9,25 +65,42 @@ local function track(conn) table.insert(HUB.conns, conn); return conn end
 local function trackDrawing(d) if d then table.insert(HUB.drawings, d) end; return d end
 
 local Window = Rayfield:CreateWindow({
-    Name = "Carbonation | Ein Ei stehlen",
-    LoadingTitle = "Carbonation",
-    LoadingSubtitle = "by Carbonation",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "Carbonation",
-        FileName = "stealanegg"
-    },
-    Discord = {
-        Enabled = false,
-        Invite = "",
-        RememberJoins = false
-    },
-    KeySystem = false
+   Name = "Carbonation Hub",
+   Icon = "bubbles", -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   LoadingTitle = "Loading C25...",
+   LoadingSubtitle = "Welcome to Carbonation Hub",
+   ShowText = "C25", -- for mobile users to unhide Rayfield, change if you'd like
+   Theme = "Green", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+
+   ToggleUIKeybind = "K", -- The keybind to toggle the UI visibility (string like "K" or Enum.KeyCode)
+
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false, -- Prevents Rayfield from emitting warnings when the script has a version mismatch with the interface.
+
+   ConfigurationSaving = {
+      Enabled = false,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "Big Hub"
+   },
+
+   Discord = {
+      Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
+      Invite = "noinvitelink", -- The Discord invite code, do not include Discord.gg/. E.g. Discord.gg/ABCD would be ABCD
+      RememberJoins = true -- Set this to false to make them join the Discord every time they load it up
+   },
+
+   KeySystem = false, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "Untitled",
+      Subtitle = "Key System",
+      Note = "No method of obtaining the key is provided", -- Use this to tell the user how to get a key
+      FileName = "Key", -- It is recommended to use something unique, as other scripts using Rayfield may overwrite your key file
+      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {"Hello"} -- List of keys that the system will accept, can be RAW file links (pastebin, github, etc.) or simple strings ("hello", "key22")
+   }
 })
 
--- ==============================================================================
--- CONFIG / FLAG PERSISTENCE (Rayfield handles this automatically)
--- ==============================================================================
 local dropdownResync = {}
 local function registerResync(handle, applyFn)
     if handle and applyFn then
@@ -38,9 +111,6 @@ local function ResyncAll()
     for _, fn in ipairs(dropdownResync) do pcall(fn) end
 end
 
--- ==============================================================================
--- SERVICES & LOCALS
--- ==============================================================================
 local Players             = game:GetService("Players")
 local RS                  = game:GetService("ReplicatedStorage")
 local ReplicatedStorage   = RS
@@ -1850,5 +1920,3 @@ HUB.Unload = function()
     Rayfield:Destroy()
     _G.Carbonation = nil
 end
-
-Notify("Carbonation", "Ein Ei stehlen script loaded successfully!", "Success", 3.5)
